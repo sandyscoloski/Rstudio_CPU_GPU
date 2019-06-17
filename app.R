@@ -12,18 +12,24 @@
 library(shiny)
 library(ggplot2)
 library(plotly)
+library(dplyr)
 
-setwd("C:/Users/ASUS/Documents/UPF/ProgOp e Otimizacao/Trabaio")
-gpu <- read.csv2("ALL_GPUs.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
-cpu <- read.csv2("Intel_CPUs.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+setwd("D:/Documents/Rstudio_CPU_GPU-master")
+all_gpu <- read.csv2("ALL_GPUs.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+all_cpu <- read.csv2("Intel_CPUs.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+
+gpu <- all_gpu %>%
+   select(Architecture, Boost_Clock, Core_Speed, L2_Cache, Manufacturer, Max_Power,
+          Memory, Memory_Bandwidth, Memory_Bus, Memory_Speed, Memory_Type, Name,
+          PSU, Pixel_Rate, Process, ROPs, Release_Date, Resolution_WxH, Texture_Rate, TMUs)
 
 # withGPU <- subset(gpu, (grepl("Yes", gpu$Notebook_GPU)))
 # withGPU <- subset(gpu$Name, (grepl("Yes", gpu$Notebook_GPU)))
 # colnames(gpu)
 
-gpu[c("Dedicated", "Direct_X", "DisplayPort_Connection", "HDMI_Connection",
-      "Integrated", "Open_GL", "Power_Connector", "ROPs", "VGA_Connection",
-      "Shader", "Release_Price", "DVI_Connection")] <- NULL
+# gpu[c("Dedicated", "Direct_X", "DisplayPort_Connection", "HDMI_Connection",
+#       "Integrated", "Open_GL", "Power_Connector", "ROPs", "VGA_Connection",
+#       "Shader", "Release_Price", "DVI_Connection")] <- NULL
 
 gpu$Core_Speed <- gsub("[ MHz]", "", gpu$Core_Speed)
 gpu$Memory_Speed <- gsub("[ MHz]", "", gpu$Memory_Speed)
@@ -36,6 +42,22 @@ gpu$Process <- gsub("[nm]", "", gpu$Process)
 gpu$L2_Cache <- gsub("[KB]", "", gpu$L2_Cache)
 gpu$Texture_Rate <- gsub("[ GTexel/s]", "", gpu$Texture_Rate)
 
+parcial <- gpu %>%
+   select(Name, Memory_Bus, Memory_Speed) %>%
+   filter(gpu$Architecture == "Sandy Bridge ")
+
+parcial$Memory_Bus[parcial$Memory_Bus == ""] <- 0
+parcial$Memory_Speed[parcial$Memory_Speed == ""] <- 0
+# min(parcial$Memory_Bus)
+# min(parcial$Memory_Speed)
+# parcial <- arrange(parcial, Memory_Bus)
+
+grafico = plot_ly(parcial, x = parcial$Name, y = parcial$Memory_Bus, name = "Memory Bus (Bit)", type = 'bar', orientation = 'v') %>%
+   add_trace(y = parcial$Memory_Speed, name = "Memory Speed (MHz)") %>%
+   layout(title = "Sandy Bridge Architecture")
+
+grafico
+# gpu <- mutate(gpu, PSU_Watt = (gsub("")))
 variaveis <- c(colnames(gpu))
 
 # Define UI for application that draws a histogram
